@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+
+	$(function(){
+		$('div').on('click','.deletebtn',function(){
+			var id=$(this).closest("tr").attr('id');
+			alert("The deleted id value is : "+id);
+			$.ajax({
+				url : "http://localhost:8080/delete/"+id,
+				method : "DELETE",
+				success : function(data) {
+					alert("Data Deleted Successfully");
+					$("#tablepen").empty();
+					getAllInfo();
+				},
+				error : function(error) {
+					alert("Delete error Occured");
+				}
+			});
+		});	
+	});
+	
+	$(function(){
+		$('div').on('click','.editbtn',function(){
+			
+			var row=$(this).closest("tr");
+			var id=row.attr('id');
+			var name=row.children()[0].innerHTML;
+			var city=row.children()[1].innerHTML;
+			var txt="<td><input type=text class=newame value="+name+"></td><td><input type=text class=newcity value="+city+"></td><td><button type=button class=editsavebtn>Save</button></td><td><button type=button class=editcancelbtn>Cancel</button></td>";
+			row.html(txt);
+		}); 
+		
+			$('div').on('click','.editcancelbtn',function(){
+			
+			var row=$(this).closest("tr");
+			var name=row.children()[0].childNodes[0].value;
+			var city=row.children()[1].childNodes[0].value;
+			var txt="<td>"+name+"</td><td>"+city+"</td><td><button type=button class='editbtn'>Update</button></td><td><button type=button class='deletebtn'>Delete</button></td>";
+			row.html(txt);
+		}); 
+			
+			$('div').on('click','.editsavebtn',function(){
+				
+				var jsonPen = {};
+				var row=$(this).closest("tr");
+				var id=row.attr('id');
+				alert(id);
+				jsonPen.name = row.children()[0].childNodes[0].value;
+				jsonPen.city = row.children()[1].childNodes[0].value;
+				var PenObj = JSON.stringify(jsonPen);
+				alert(PenObj);
+				
+				$.ajax({
+					url : "http://localhost:8080/update/"+id,
+					method : "PUT",
+					data : PenObj,
+					contentType : "application/json",
+					success : function(data) {
+						alert(data);
+						$("#tablepen").empty();
+						getAllInfo();
+					},
+					error : function(error) {
+						alert("Delete error Occured");
+					}
+				});
+			}); 
+		
+	});
+		
+	
+		
+		
+	function getAllInfo() {
+		$.ajax({
+			url : "http://localhost:8080/all",
+			method : "GET",
+			success : function(data) {
+				var txt = '';
+				for(var i=0; i<data.length;i++){
+					var btnTxt = "<td><button type=button class='editbtn'>Update</button></td><td><button type=button class='deletebtn'>Delete</button></td>";
+					var line = "<tr id="+data[i].id+"><td>"+data[i].name+"</td><td>"+data[i].city+"</td>"+btnTxt+"</tr>";
+					txt = txt + line;
+				}
+				$("#tablepen").append(txt);
+				console.log(data);
+			},
+			error : function(error) {
+				alert("List error Occured");
+			}
+		});
+	}
+	
+	$(document).ready(function() {
+		hideDivSection();
+		
+		getAllInfo();
+		
+		$("#addbtn").click(function() {
+			document.getElementById("addpen").value = " ";
+			document.getElementById("addcategory").value = " ";
+			document.getElementById("adddiv").hidden = false;
+			document.getElementById("addbtn").hidden = true;
+		});
+				
+		$("#savebtn").click(function() {
+			var jsonPen = {};
+			jsonPen.name = $('#addpen').val();
+			jsonPen.city = $('#addcategory').val();
+			var PenObj = JSON.stringify(jsonPen);
+			alert(PenObj);		
+			$.ajax({
+				url : "http://localhost:8080/insert",
+				method : "POST",
+				data : PenObj,
+				contentType : "application/json",
+				success : function(data) {
+					$("#tablepen").empty();
+					getAllInfo();
+					hideDivSection();
+				},
+				error : function(err) {
+					alert("save error");
+				}
+		});
+	});
+		
+	function hideDivSection(){
+		document.getElementById("addpen").value = "";
+		document.getElementById("addcategory").value = "";
+		document.getElementById("adddiv").hidden = true;
+		document.getElementById("addbtn").hidden = false;
+	}
+		
+		$("#cancelbtn").click(function() {
+			document.getElementById("addpen").value = " ";
+			document.getElementById("addcategory").value = " ";
+			document.getElementById("adddiv").hidden = true;
+			document.getElementById("addbtn").hidden = false;
+		});
+});	
+
+
+</script>
+</head>
+<body>
+	<h1>Welcome to Spring-Boot Ajax.</h1>
+	<div>
+		<table id="tablepen" border="1">
+			<tr>
+				<th>Name</th>
+				<th>City</th>
+				<th colspan=2, align="center">Actions</th>
+			</tr>
+		</table>
+		<br>
+		<br>
+		<input type="button" id="addbtn" value="Add">
+	</div>
+	<br>
+	<br>
+	<div id="adddiv">
+		Name : <input type="text" id="addpen"> <br> <br>
+		City : <input type="text" id="addcategory"> <br> <br>
+		<input type="button" id="savebtn" value="Save"> <input
+			type="button" id="cancelbtn" value="Cancel">
+	</div>
+</body>
+</html>
